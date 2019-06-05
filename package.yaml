@@ -1,0 +1,27 @@
+name:                recent-github-issues
+version:             0.1.0.0
+github:              "davecturner/recent-github-issues"
+license:             BSD3
+author:              "David Turner"
+maintainer:          "dave.c.turner@gmail.com"
+copyright:           "2019 David Turner"
+
+description:         Please see the README on GitHub at <https://github.com/davecturner/recent-github-issues#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- wreq
+- lens
+- aeson
+- bytestring
+- text
+- time
+
+executables:
+  recent-github-issues:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
