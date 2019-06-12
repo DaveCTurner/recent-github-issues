@@ -49,10 +49,11 @@ instance FromJSON Issue where
 issueRepoAbbreviation :: Issue -> String
 issueRepoAbbreviation i = if
   | repo == "https://api.github.com/repos/elastic/elasticsearch"                  -> ""
+  | repo == "https://api.github.com/repos/elastic/support-support-help"           -> "ssh"
   | repo == "https://api.github.com/repos/elastic/support-dev-help"               -> "sdh"
   | repo == "https://api.github.com/repos/elastic/support-dev-help-elasticsearch" -> "sdhe"
-  | "https://api.github.com/repos/elastic/" `T.isPrefixOf` repo                   -> T.unpack $ T.drop (T.length "https://api.github.com/repos/")         repo
-  | "https://api.github.com/repos/"         `T.isPrefixOf` repo                   -> T.unpack $ T.drop (T.length "https://api.github.com/repos/elastic/") repo
+  | "https://api.github.com/repos/elastic/" `T.isPrefixOf` repo                   -> T.unpack $ T.drop (T.length "https://api.github.com/repos/elastic/") repo
+  | "https://api.github.com/repos/"         `T.isPrefixOf` repo                   -> T.unpack $ T.drop (T.length "https://api.github.com/repos/")         repo
   | otherwise                                                                     -> error $ "unknown repo format: " ++ show repo
 
   where
