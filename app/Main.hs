@@ -72,7 +72,7 @@ main = do
   userResponse <- asJSON =<< getWith opts "https://api.github.com/user"
   let userResponseBody = userResponse ^. responseBody
 
-  startDay <- show . addDays (-8) . utctDay <$> getCurrentTime
+  startDay <- show . addDays (-16) . utctDay <$> getCurrentTime
 
   let go url = do
         searchResponse <- asJSON =<< getWith opts url
