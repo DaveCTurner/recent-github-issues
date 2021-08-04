@@ -6,6 +6,7 @@ module Main where
 import Network.Wreq
 import System.Environment
 import Control.Lens
+import Control.Concurrent (threadDelay)
 import qualified Data.ByteString as B
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
@@ -74,7 +75,9 @@ main = do
 
   startDay <- show . addDays (-16) . utctDay <$> getCurrentTime
 
-  let go url = do
+  let go pageNum url = do
+        when (pageNum > 10) $ threadDelay 1000000
+        when (pageNum > 15) $ threadDelay 5000000
         searchResponse <- asJSON =<< getWith opts url
         forM_ (_srIssues $ searchResponse ^. responseBody) $ \issue ->
           putStrLn $ printf "[%s] ([%s#%d](%s)) %s"
@@ -84,9 +87,9 @@ main = do
             (T.unpack $ _issueHtmlUrl issue)
             (T.unpack $ _issueTitle   issue)
         case searchResponse ^? responseLink "rel" "next" . linkURL of
-          Just url' -> go $ T.unpack $ T.decodeUtf8 url'
+          Just url' -> go (pageNum + 1) $ T.unpack $ T.decodeUtf8 url'
           Nothing   -> return ()
 
-  go $ "https://api.github.com/search/issues?per_page=100&q=involves:" ++ _urLogin userResponseBody ++ "+updated:>=" ++ startDay ++ "&sort=updated"
+  go 0 $ "https://api.github.com/search/issues?per_page=100&q=involves:" ++ _urLogin userResponseBody ++ "+updated:>=" ++ startDay ++ "&sort=updated"
 
 
