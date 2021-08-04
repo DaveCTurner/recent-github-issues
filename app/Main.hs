@@ -87,6 +87,6 @@ main = do
           Just url' -> go $ T.unpack $ T.decodeUtf8 url'
           Nothing   -> return ()
 
-  go $ "https://api.github.com/search/issues?q=involves:" ++ _urLogin userResponseBody ++ "+updated:>=" ++ startDay ++ "&sort=updated"
+  go $ "https://api.github.com/search/issues?per_page=100&q=involves:" ++ _urLogin userResponseBody ++ "+updated:>=" ++ startDay ++ "&sort=updated"
 
 
