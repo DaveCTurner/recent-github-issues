@@ -14,6 +14,9 @@ import Data.Aeson
 import Control.Monad
 import Text.Printf
 import Data.Time
+import System.IO
+import System.FilePath
+import System.Directory
 
 data UserResponseBody = UserResponseBody
   { _urLogin :: String
@@ -73,23 +76,40 @@ main = do
   userResponse <- asJSON =<< getWith opts "https://api.github.com/user"
   let userResponseBody = userResponse ^. responseBody
 
-  startDay <- show . addDays (-16) . utctDay <$> getCurrentTime
+  today <- utctDay <$> getCurrentTime
+  let startDay = show $ addDays (-16) today
 
-  let go pageNum url = do
-        when (pageNum > 10) $ threadDelay 1000000
-        when (pageNum > 15) $ threadDelay 5000000
-        searchResponse <- asJSON =<< getWith opts url
-        forM_ (_srIssues $ searchResponse ^. responseBody) $ \issue ->
-          putStrLn $ printf "[%s] ([%s#%d](%s)) %s"
-            (show $ utctDay $ _issueUpdated issue)
-            (issueRepoAbbreviation    issue)
-            (_issueNumber             issue)
-            (T.unpack $ _issueHtmlUrl issue)
-            (T.unpack $ _issueTitle   issue)
-        case searchResponse ^? responseLink "rel" "next" . linkURL of
-          Just url' -> go (pageNum + 1) $ T.unpack $ T.decodeUtf8 url'
-          Nothing   -> return ()
+  homeDir <- getEnv "HOME"
+  let outputFile = homeDir </> "status-updates" </> (show today ++ ".mm")
+  exists <- doesFileExist outputFile
+  when exists $ error $ outputFile ++ " already exists"
 
-  go 0 $ "https://api.github.com/search/issues?per_page=100&q=involves:" ++ _urLogin userResponseBody ++ "+updated:>=" ++ startDay ++ "&sort=updated"
+  putStrLn $ "creating " ++ outputFile
+  withFile outputFile WriteMode $ \h -> do
 
+    let go pageNum url = do
+          when (pageNum > 10) $ threadDelay 1000000
+          when (pageNum > 15) $ threadDelay 5000000
+          searchResponse <- asJSON =<< getWith opts url
+          forM_ (_srIssues $ searchResponse ^. responseBody) $ \issue ->
+            hPutStrLn h $ printf "<node TEXT='[%s] ([%s#%d](%s)) %s' LINK='%s' MAX_WIDTH='100 cm' />"
+              (show $ utctDay $ _issueUpdated issue)
+              (issueRepoAbbreviation    issue)
+              (_issueNumber             issue)
+              (T.unpack $ _issueHtmlUrl issue)
+              (concatMap (\c -> if c == '\'' then "&apos;" else [c])
+              $T.unpack $ _issueTitle   issue)
+              (T.unpack $ _issueHtmlUrl issue)
+          case searchResponse ^? responseLink "rel" "next" . linkURL of
+            Just url' -> go (pageNum + 1) $ T.unpack $ T.decodeUtf8 url'
+            Nothing   -> return ()
+
+    hPutStrLn h   "<?xml version='1.0' encoding='UTF-8'?>"
+    hPutStrLn h   "<map version='freeplane 1.9.0'>"
+    hPutStrLn h $ "<node TEXT='" ++ show today ++ "&#xA;Status update' STYLE='oval' FOLDED='false'>"
+    hPutStrLn h   "<node TEXT='issues' POSITION='right'>"
+
+    go 0 $ "https://api.github.com/search/issues?per_page=100&q=involves:" ++ _urLogin userResponseBody ++ "+updated:>=" ++ startDay ++ "&sort=updated"
+
+    hPutStrLn h   "</node></node></map>"
 

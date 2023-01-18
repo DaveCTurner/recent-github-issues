@@ -16,6 +16,8 @@ dependencies:
 - bytestring
 - text
 - time
+- filepath
+- directory
 
 executables:
   recent-github-issues:
