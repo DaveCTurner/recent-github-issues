@@ -58,6 +58,7 @@ issueRepoAbbreviation i = if
   | repo == "https://api.github.com/repos/elastic/sdh-elasticsearch"              -> "sdhe"
   | repo == "https://api.github.com/repos/elastic/cloud-on-k8s"                   -> "eck"
   | repo == "https://api.github.com/repos/elastic/elasticsearch-team-planning"    -> "es-plans"
+  | repo == "https://api.github.com/repos/elastic/elasticsearch-stateless"        -> "stateless"
   | "https://api.github.com/repos/elastic/" `T.isPrefixOf` repo                   -> T.unpack $ T.drop (T.length "https://api.github.com/repos/elastic/") repo
   | "https://api.github.com/repos/"         `T.isPrefixOf` repo                   -> T.unpack $ T.drop (T.length "https://api.github.com/repos/")         repo
   | otherwise                                                                     -> error $ "unknown repo format: " ++ show repo
