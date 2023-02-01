@@ -98,7 +98,11 @@ main = do
               (issueRepoAbbreviation    issue)
               (_issueNumber             issue)
               (T.unpack $ _issueHtmlUrl issue)
-              (concatMap (\c -> if c == '\'' then "&apos;" else [c])
+              (concatMap (\c -> case c of
+                  '\'' -> "&apos;"
+                  '<'  -> "&lt;"
+                  '>'  -> "&gt;"
+                  otherwise -> [c])
               $T.unpack $ _issueTitle   issue)
               (T.unpack $ _issueHtmlUrl issue)
           case searchResponse ^? responseLink "rel" "next" . linkURL of
