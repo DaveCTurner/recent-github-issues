@@ -99,6 +99,7 @@ main = do
               (_issueNumber             issue)
               (T.unpack $ _issueHtmlUrl issue)
               (concatMap (\c -> case c of
+                  '&'  -> "&amp;"
                   '\'' -> "&apos;"
                   '<'  -> "&lt;"
                   '>'  -> "&gt;"
