@@ -104,8 +104,8 @@ main = do
                   '<'  -> "&lt;"
                   '>'  -> "&gt;"
                   otherwise -> [c])
-              $T.unpack $ _issueTitle   issue)
-              (T.unpack $ _issueHtmlUrl issue)
+              $ T.unpack $ _issueTitle   issue)
+              ( T.unpack $ _issueHtmlUrl issue)
           case searchResponse ^? responseLink "rel" "next" . linkURL of
             Just url' -> go (pageNum + 1) $ T.unpack $ T.decodeUtf8 url'
             Nothing   -> return ()
