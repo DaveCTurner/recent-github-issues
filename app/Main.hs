@@ -3,22 +3,52 @@
 
 module Main where
 
-import Network.Wreq
-import System.Environment
-import Control.Lens
 import Control.Concurrent (threadDelay)
+import Control.Lens
+import Control.Monad
+import Data.Aeson
+import Data.String.Utils (strip)
+import Data.Time
+import Network.Wreq
+import Options.Applicative hiding (header)
+import System.Directory
+import System.Environment
+import System.FilePath
+import System.IO
+import Text.Printf
 import qualified Data.ByteString as B
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import Data.Aeson
-import Control.Monad
-import Text.Printf
-import Data.Time
-import System.IO
-import System.FilePath
-import System.Directory
 import qualified System.Process as SP
-import Data.String.Utils (strip)
+import qualified Options.Applicative as OA
+
+data TimeRangeStartSpec
+  = TimeRangeLength Integer
+  | TimeRangeStart String
+    deriving (Show, Eq)
+
+timeRangeStartSpec :: Parser TimeRangeStartSpec
+timeRangeStartSpec = timeRangeStart <|> timeRangeLength
+  where
+    timeRangeLength :: Parser TimeRangeStartSpec
+    timeRangeLength = TimeRangeLength <$> option auto
+        (  long "days"
+        <> help "Number of days back from today for issues list"
+        <> metavar "DAYS"
+        <> value 16
+        <> showDefault)
+
+    timeRangeStart :: Parser TimeRangeStartSpec
+    timeRangeStart = TimeRangeStart <$> strOption
+        (  long "start-day"
+        <> help "Start day for issues list"
+        <> metavar "YYYY-MM-DD")
+
+configParser :: ParserInfo TimeRangeStartSpec
+configParser = info (timeRangeStartSpec <**> helper)
+    (fullDesc
+        <> progDesc "Generate list of recent Github issues"
+        <> OA.header "recent-github-issues - Generate list of recent Github issues")
 
 data UserResponseBody = UserResponseBody
   { _urLogin :: String
@@ -70,6 +100,8 @@ issueRepoAbbreviation i = if
 
 main :: IO ()
 main = do
+  config <- execParser configParser
+
   token <- strip <$> SP.readProcess "security" ["find-generic-password", "-s", "github-recent-issues", "-w"] ""
 
   let opts = defaults 
@@ -80,7 +112,9 @@ main = do
   let userResponseBody = userResponse ^. responseBody
 
   today <- utctDay <$> getCurrentTime
-  let startDay = show $ addDays (-16) today
+  let startDay = case config of
+        TimeRangeLength days    -> show $ addDays (-days) today
+        TimeRangeStart startDay -> startDay
 
   homeDir <- getEnv "HOME"
   let outputFile = homeDir </> "status-updates" </> (show today ++ ".mm")
