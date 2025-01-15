@@ -17,6 +17,8 @@ import Data.Time
 import System.IO
 import System.FilePath
 import System.Directory
+import qualified System.Process as SP
+import Data.String.Utils (strip)
 
 data UserResponseBody = UserResponseBody
   { _urLogin :: String
@@ -68,7 +70,7 @@ issueRepoAbbreviation i = if
 
 main :: IO ()
 main = do
-  token <- getEnv "GITHUB_ISSUES_TOKEN"
+  token <- strip <$> SP.readProcess "security" ["find-generic-password", "-s", "github-recent-issues", "-w"] ""
 
   let opts = defaults 
         & header "Accept"        .~ ["application/vnd.github.v3+json"]
