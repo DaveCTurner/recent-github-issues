@@ -152,8 +152,8 @@ main = do
     hPutStrLn h $ "<node TEXT='" ++ show today ++ "&#xA;Status update' STYLE='oval' FOLDED='false'>"
     hPutStrLn h   "<node TEXT='issues' POSITION='right'>"
 
-    issuePages <- go          0 $ "https://api.github.com/search/issues?per_page=100&q=involves:" ++ _urLogin userResponseBody ++ "+updated:>=" ++ startDay ++ "+is:issue&sort=updated"
-    go               issuePages $ "https://api.github.com/search/issues?per_page=100&q=involves:" ++ _urLogin userResponseBody ++ "+updated:>=" ++ startDay ++ "+is:pr&sort=updated"
+    issuePages <- go          0 $ "https://api.github.com/search/issues?per_page=100&q=involves:" ++ _urLogin userResponseBody ++ "+updated:>=" ++ startDay ++ "+is:issue&sort=updated&advanced_search=true"
+    go               issuePages $ "https://api.github.com/search/issues?per_page=100&q=involves:" ++ _urLogin userResponseBody ++ "+updated:>=" ++ startDay ++ "+is:pr&sort=updated&advanced_search=true"
 
     hPutStrLn h   "</node></node></map>"
 
