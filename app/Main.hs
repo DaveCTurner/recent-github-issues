@@ -145,14 +145,15 @@ main = do
               ( T.unpack $ _issueHtmlUrl issue)
           case searchResponse ^? responseLink "rel" "next" . linkURL of
             Just url' -> go (pageNum + 1) $ T.unpack $ T.decodeUtf8 url'
-            Nothing   -> return ()
+            Nothing   -> return pageNum
 
     hPutStrLn h   "<?xml version='1.0' encoding='UTF-8'?>"
     hPutStrLn h   "<map version='freeplane 1.9.0'>"
     hPutStrLn h $ "<node TEXT='" ++ show today ++ "&#xA;Status update' STYLE='oval' FOLDED='false'>"
     hPutStrLn h   "<node TEXT='issues' POSITION='right'>"
 
-    go 0 $ "https://api.github.com/search/issues?per_page=100&q=involves:" ++ _urLogin userResponseBody ++ "+updated:>=" ++ startDay ++ "&sort=updated"
+    issuePages <- go          0 $ "https://api.github.com/search/issues?per_page=100&q=involves:" ++ _urLogin userResponseBody ++ "+updated:>=" ++ startDay ++ "+is:issue&sort=updated"
+    go               issuePages $ "https://api.github.com/search/issues?per_page=100&q=involves:" ++ _urLogin userResponseBody ++ "+updated:>=" ++ startDay ++ "+is:pr&sort=updated"
 
     hPutStrLn h   "</node></node></map>"
 
