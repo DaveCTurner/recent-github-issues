@@ -11,6 +11,7 @@ description:         Please see the README on GitHub at <https://github.com/dave
 dependencies:
 - base >= 4.7 && < 5
 - aeson
+- base64-bytestring
 - bytestring
 - directory
 - filepath
@@ -19,6 +20,7 @@ dependencies:
 - process
 - text
 - time
+- typed-process
 - wreq
 - MissingH
 

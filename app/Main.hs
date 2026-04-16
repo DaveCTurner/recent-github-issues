@@ -7,6 +7,7 @@ import Control.Concurrent (threadDelay)
 import Control.Lens
 import Control.Monad
 import Data.Aeson
+import Data.Maybe (fromMaybe)
 import Data.String.Utils (strip)
 import Data.Time
 import Network.Wreq
@@ -15,8 +16,12 @@ import System.Directory
 import System.Environment
 import System.FilePath
 import System.IO
+import System.Process.Typed (proc, readProcessStdout_)
 import Text.Printf
+
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Base64.Lazy as B64
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified System.Process as SP
@@ -107,11 +112,15 @@ main :: IO ()
 main = do
   config <- execParser configParser
 
-  token <- strip <$> SP.readProcess "security" ["find-generic-password", "-s", "github-recent-issues", "-w"] ""
+  token <- BL.toStrict
+        <$> B64.decodeLenient
+        <$> fromMaybe (error "GitHub keychain entry did not start with go-keyring-base64:")
+        <$> BL.stripPrefix "go-keyring-base64:"
+        <$> readProcessStdout_ (proc "security" ["find-generic-password", "-s", "gh:github.com", "-w"])
 
   let opts = defaults 
         & header "Accept"        .~ ["application/vnd.github.v3+json"]
-        & header "Authorization" .~ [B.append "token " $ T.encodeUtf8 $ T.pack token]
+        & header "Authorization" .~ ["token " <> token]
 
   userResponse <- asJSON =<< getWith opts "https://api.github.com/user"
   let userResponseBody = userResponse ^. responseBody
